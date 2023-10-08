@@ -141,7 +141,7 @@ def segment(seq, maxlen=50):
         i += inc
     return np.stack(s, axis=0)
 
-def process_midi_seq(all_midis=None, datadir='data', n=10000, maxlen=50):
+def process_midi_seq(all_midis=None, datadir='data', n=10000, maxlen=50, shuffle_seed=None):
     '''
     Process a list of midis, convert them to sequences and segment sequences into segments of length max_len
     :param all_midis: the list of midis. If None, midis will be loaded from files
@@ -152,7 +152,12 @@ def process_midi_seq(all_midis=None, datadir='data', n=10000, maxlen=50):
     '''
     if all_midis is None:
         all_midis = glob.glob(datadir+'/maestro-v1.0.0/**/*.midi')
-        random.seed()    # for debug purpose, you can pass a fix number when calling seed()
+
+        # for debug purpose, you can pass a fix number when calling seed()
+        if shuffle_seed:
+            random.seed(shuffle_seed)
+        else:
+            random.seed()    
         random.shuffle(all_midis)
 
     data = []
