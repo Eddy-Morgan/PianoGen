@@ -84,6 +84,7 @@ def seq2piano(seq):
     :param seq: numpy array that contains the sequence
     :return: midi object
     '''
+    logging.info('fd')
     midi = pretty_midi.PrettyMIDI()
     piano = pretty_midi.Instrument(program=0, is_drum=False, name='piano')
     midi.instruments.append(piano)
@@ -95,6 +96,8 @@ def seq2piano(seq):
     time = 0.
     for e in seq:
         t, v = Event.decode(e)
+        logging.info('heyy')
+        logging.debug(t,v)
         if t == 'shift':
             time += v
         elif t == 'velo':
@@ -105,7 +108,7 @@ def seq2piano(seq):
         elif t == 'down':
             n = inote.get(v, None)
             if n is not None:
-                logging.debug('consecutive downs for pitch %d at time %d and %d' % (v, n[2], time))
+                logging.debug('fconsecutive downs for pitch %d at time %d and %d' % (v, n[2], time))
             else:
                 inote[v]  = [velo, v, time, -1]
         else:
@@ -118,7 +121,7 @@ def seq2piano(seq):
                     logging.debug('note with non-positive duration for pitch %d at time %d' % (n[1], n[2]))
                 del inote[v]
             else:
-                logging.debug('up without down for pitch %d at time %d' % (v, time))
+                logging.debug('fup without down for pitch %d at time %d' % (v, time))
 
     # clean out the incomplete note buffer, assuming these note end at last
     for n in inote.values():
@@ -171,12 +174,13 @@ def process_midi_seq(all_midis=None, datadir='data', n=10000, maxlen=50, shuffle
 
     return np.vstack(data)
 
-def random_piano(n=100):
+def random_piano(seed, n=100):
     '''
     Generate random piano note
     :param n: # of notes to be generated
     :return: midi object with the notes
     '''
+    random.seed(seed)
     midi = pretty_midi.PrettyMIDI()
     piano = pretty_midi.Instrument(program=0, is_drum=False, name='piano')
     midi.instruments.append(piano)

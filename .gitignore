@@ -131,5 +131,5 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-.pth
-.pth.tar
+*.pth
+*.pth.tar
