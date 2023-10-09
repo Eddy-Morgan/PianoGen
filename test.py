@@ -1,12 +1,22 @@
-from hw1 import Composer
+from hw1 import Composer, CriticSourceData, MidiCriticDataset
 from midi2seq import process_midi_seq, seq2piano
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
-bsz = 0
+bsz = 100
 epoch = 0
-piano_seq = torch.from_numpy(process_midi_seq())
-loader = DataLoader(TensorDataset(piano_seq), shuffle=True, batch_size=bsz, num_workers=4)
+
+# build data loader for critic model
+X_train,Y_train,X_test,Y_test = CriticSourceData.preprocess(1)
+train_dataset = MidiCriticDataset(X_train,Y_train)
+test_dataset = MidiCriticDataset(X_test,Y_test)
+
+critic_train_loader = DataLoader(train_dataset,batch_size = bsz, shuffle=True)
+critic_test_loader = DataLoader(test_dataset,batch_size = bsz, shuffle=False)
+
+for i in range(epoch):
+    for batch in critic_train_loader:
+        pass
 
 cps = Composer(load_trained=True)
 # for i in range(epoch):
