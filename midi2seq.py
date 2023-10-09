@@ -84,7 +84,6 @@ def seq2piano(seq):
     :param seq: numpy array that contains the sequence
     :return: midi object
     '''
-    logging.info('fd')
     midi = pretty_midi.PrettyMIDI()
     piano = pretty_midi.Instrument(program=0, is_drum=False, name='piano')
     midi.instruments.append(piano)
@@ -96,8 +95,6 @@ def seq2piano(seq):
     time = 0.
     for e in seq:
         t, v = Event.decode(e)
-        logging.info('heyy')
-        logging.debug(t,v)
         if t == 'shift':
             time += v
         elif t == 'velo':
@@ -108,7 +105,7 @@ def seq2piano(seq):
         elif t == 'down':
             n = inote.get(v, None)
             if n is not None:
-                logging.debug('fconsecutive downs for pitch %d at time %d and %d' % (v, n[2], time))
+                logging.debug('consecutive downs for pitch %d at time %d and %d' % (v, n[2], time))
             else:
                 inote[v]  = [velo, v, time, -1]
         else:
@@ -121,7 +118,7 @@ def seq2piano(seq):
                     logging.debug('note with non-positive duration for pitch %d at time %d' % (n[1], n[2]))
                 del inote[v]
             else:
-                logging.debug('fup without down for pitch %d at time %d' % (v, time))
+                logging.debug('up without down for pitch %d at time %d' % (v, time))
 
     # clean out the incomplete note buffer, assuming these note end at last
     for n in inote.values():
