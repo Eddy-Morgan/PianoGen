@@ -62,6 +62,7 @@ def piano2seq(midi):
 
     t = 0
     qfull = []
+    es = []
     for e in sorted(q, key=lambda x: x.time):
         d = e.time - t
         while d > 0.01:
@@ -70,6 +71,8 @@ def piano2seq(midi):
             d = d - dd
         t = e.time
         qfull.append(e)
+
+
 
     seq = np.zeros((len(qfull),), dtype=np.int32)
     for i, e in enumerate(qfull):
@@ -166,13 +169,13 @@ def process_midi_seq(all_midis=None, datadir='data', n=10000, maxlen=50):
 
     return np.vstack(data)
 
-def random_piano(seed, n=100):
+def random_piano(n=100):
     '''
     Generate random piano note
     :param n: # of notes to be generated
     :return: midi object with the notes
     '''
-    random.seed(seed)
+    random.seed()
     midi = pretty_midi.PrettyMIDI()
     piano = pretty_midi.Instrument(program=0, is_drum=False, name='piano')
     midi.instruments.append(piano)
