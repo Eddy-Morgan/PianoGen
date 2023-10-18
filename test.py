@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader, TensorDataset, Dataset
 bsz = 100
 epoch = 700
 
-## build data loader for critic model
+# build data loader for critic model
 piano_seq = torch.from_numpy(process_midi_seq())
 good_labels = torch.ones((piano_seq.shape[0],1))
 piano_data = torch.hstack((piano_seq,good_labels))
@@ -32,7 +32,7 @@ Y_test = Y_test.reshape((-1,1))
 X_test = X_test.clone().detach().to(device).long()
 Y_test = Y_test.clone().detach().to(device).long()
     
-critic_loader = DataLoader(MidiCriticDataset(train_data), shuffle=True, batch_size=bsz)
+# critic_loader = DataLoader(MidiCriticDataset(train_data), shuffle=True, batch_size=bsz)
 
 ctc = Critic(load_trained=True)
 
@@ -40,29 +40,29 @@ ctc = Critic(load_trained=True)
 #     for x in critic_loader:
 #         ctc.train(x,i)
 
-# # ctc.save_model()
+# ctc.save_model()
 
-## check accuracy
+# check accuracy
 final_test_acc = ctc.accuracy(X_test, Y_test)
 print(final_test_acc)
 
 
 
-# # build data loader for composer model
+# build data loader for composer model
 # piano_seq = torch.from_numpy(process_midi_seq())
 # composer_train_loader = DataLoader(TensorDataset(piano_seq), shuffle=True, batch_size = bsz)
 
-# cps = Composer(load_trained=False)
+# cps = Composer(load_trained=True)
 
-# ## training compose model
+# training compose model
 # for i in range(epoch):
 #     for x in composer_train_loader:
-#         cps.train(x[0].to(device).long(), i)
+#         cps.train(x[0].to(device).long())
 
 # cps.save_composer_model_checkpoint(epoch)
 
-## compose a sequence of piano plays
-# composed = cps.compose(25000)
+# compose a sequence of piano plays
+# composed = cps.compose(12000)
 # midi = seq2piano(composed)
 # midi_file = "piano1.midi"
 # midi.write(midi_file)
@@ -70,4 +70,4 @@ print(final_test_acc)
 ## scoring music sequences
 # seq = process_midi_seq(all_midis=[midi_file])
 # predictions = ctc.score(seq)
-# logging.info(f'piano music scoring ::: {predictions}')
+# logging.info(f'piano music scoring ::: {torch.mean(predictions)}')

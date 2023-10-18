@@ -1,3 +1,31 @@
+'''
+What is the average score of the generated music?
+
+answer:
+The composer function was used to compose 52 sequences and the critic scored it with a mean of 0.9968
+
+
+One idea to improve the quality of your composed music is to combine the composer with the 
+critic to form a GAN and train the GAN to obtain a better composer. 
+What is the major difficulty to train such a GAN?
+Discuss a possible solution that may overcome this major difficulty. 
+
+answer:
+The major difficulty in training GANs for music generation lies in achieving the right balance between the generator and critic, 
+ the unique challenges of musical coherence and subjective evaluation. 
+Potential solutions involve architectural choices like custom loss functions, 
+curriculum learning, data augmentation, and expert feedback. 
+Striking the right equilibrium is crucial to ensure that the generator produces musically coherent 
+and artistically pleasing compositions while maintaining training stability.
+'''
+
+
+
+
+
+
+
+
 import logging
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 logging.info(f'Importing dependencies')
@@ -18,6 +46,9 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else
 
 
 class MidiCriticDataset(Dataset):
+    '''
+        critic dataset class
+    '''
     def __init__(self, data):
         self.data = data
 
@@ -30,6 +61,9 @@ class MidiCriticDataset(Dataset):
     
 
 class CriticModel(nn.Module):
+    '''
+        critic model class
+    '''
     def __init__(self, vocab_size, embedding_dim, n_hidden=256, n_layers=3):
         super(CriticModel, self).__init__()
 
@@ -83,14 +117,14 @@ class Critic(CriticBase):
             output = 'critic.pth'
             if not os.path.isfile(output):
                 logging.info('load model from file ...')
-                url = 'https://drive.google.com/uc?id=1_VaJ3CqfgFBUIuCB4qX3z_Lj2wOVqnIb'
+                url = 'https://drive.google.com/uc?id=1HH3ivlmNyCjDlXtwwCAv8QqPtMu2No0S'
                 gdown.download(url, output, quiet=False)
 
-            state_dict = torch.load(output).state_dict()
+            state_dict = torch.load(output, map_location=device).state_dict()
             self.model.load_state_dict(state_dict)
             logging.info(self.model) 
 
-    def train(self, batch, epoch_n):
+    def train(self, batch, epoch_n=None):
         '''
         Train the model on one batch of data
         :param x: train data. For critic training, x will be a tuple of two tensors (data, label)
@@ -110,7 +144,7 @@ class Critic(CriticBase):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-        logging.info(f'epoch {epoch_n} - loss for batch at {b_loss}')
+        logging.info(f"{'Epoch '+str(epoch_n) if epoch_n else ''} loss for batch at {b_loss}")
         return b_loss
 
     def save_model(self):
@@ -231,7 +265,7 @@ class Composer(ComposerBase):
         loss.backward()
         self.optimizer.step()
 
-        logging.info(f'Epoch {epoch_n} - batch loss {loss.item()} ')
+        logging.info(f"{'Epoch '+str(epoch_n) if epoch_n else ''} loss for batch at {loss.item()}")
         return loss.item()
     
     def save_composer_model_checkpoint(self, num_epochs):
@@ -246,17 +280,16 @@ class Composer(ComposerBase):
         # Note: Input model & optimizer should be pre-defined.  This routine only updates their states.
         start_epoch = 0
         if os.path.isfile(filename):
-            print("=> loading checkpoint '{}'".format(filename))
-            self.checkpoint = torch.load(filename)
+            logging.info(f'=> loading checkpoint {filename}')
+            self.checkpoint = torch.load(filename, map_location=device)
             start_epoch = self.checkpoint['epoch']
             self.model.load_state_dict(self.checkpoint['state_dict'])
             self.optimizer.load_state_dict(self.checkpoint['optimizer'])
             losslogger = self.checkpoint['losslogger']
-            print("=> loaded checkpoint '{}' (epoch {})"
-                    .format(filename, self.checkpoint['epoch']))
+            logging.info(f"=> loaded checkpoint {filename} epoch {self.checkpoint['epoch']}")
             self.model.to(device)
         else:
-            print("=> no checkpoint found at '{}'".format(filename))
+            logging.info(f"=> no checkpoint found at {filename}")
         return start_epoch, losslogger
 
     def compose(self, n):
@@ -268,22 +301,20 @@ class Composer(ComposerBase):
 
         self.model.train(False)
         self.model.eval()
-
         with torch.no_grad():
             prompt_sequence = torch.zeros((1, 51))
             prompt_sequence[:,50] = np.random.randint(0,dim)
             generated_sequence = prompt_sequence
-            
+            logging.info(f"composing music sequence")
             for _ in range(n):
                 output = self.model(prompt_sequence.to(device).long())
-                print(output)
+                prediction = torch.argmax(output[0])
                 # New value to append
-                new_value = torch.tensor([[[output]]], dtype=torch.float32)
+                new_value = torch.tensor([[prediction]])
                 # Append the new value to the original tensor
                 prompt_sequence = torch.cat((prompt_sequence, new_value), dim=1)
-                prompt_sequence = prompt_sequence[:,1:,:]
-
+                prompt_sequence = prompt_sequence[:,1:]
                 generated_sequence = torch.cat((generated_sequence, new_value), dim=1)
                 
-        generated_sequence = generated_sequence.reshape((-1,1)).flatten().astype(int)
+        generated_sequence = torch.flatten(generated_sequence).to(torch.int).numpy()
         return generated_sequence
